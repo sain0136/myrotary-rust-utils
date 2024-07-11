@@ -15,12 +15,16 @@ struct Args {
     name: String,
 
     /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(short = 'k', long, default_value_t = 1)]
     count: u8,
 
     /// Play a game
     #[arg(short, long)]
     game: bool,
+
+    /// Run the calculator
+    #[arg(short, long)]
+    calculator: bool,
 }
 
 fn main() {
@@ -28,7 +32,12 @@ fn main() {
 
     if args.game {
         commands::game::guessing_game("Sebastien");
+    } else if args.calculator {
+        commands::calculator::calculator();
     } else {
-        println!("Hello,{} you called this program {} times!", args.name, args.count);
+        println!(
+            "Hello,{} you called this program {} times!",
+            args.name, args.count
+        );
     }
 }
