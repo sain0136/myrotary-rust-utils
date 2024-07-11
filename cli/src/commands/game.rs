@@ -3,8 +3,8 @@ use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
 
-fn main() {
-    println!("This is a guessing game");
+pub fn guessing_game(username: &str) {
+    println!("Welcome {}, This is a guessing game. I am thinking of a number between 1 and 5. Can you guess it?", username);
     // mut allows this variable to be changed
     loop {
         println!("Please input your guess.");
