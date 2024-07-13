@@ -1,8 +1,8 @@
+use crate::utils::terminal;
 use cfonts::{say, Align, BgColors, Colors, Env, Fonts, Options};
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::io;
-
-const GREETING: &str = "Welcome to the calculator Version 0.0.1";
+const GREETING: &str = "Welcome to the Calculator Version 0.0.1";
 
 struct NumberSet {
     num1: i32,
@@ -42,7 +42,7 @@ pub fn calculator() {
     let mut number_set = NumberSet { num1: 0, num2: 0 };
     prompt(&mut number_set);
     loop {
-        let options = &["Add", "Subtract", "Multiply", "Divide", "Exit"];
+        let options = &["Add", "Subtract", "Multiply", "Divide", "Reset", "Exit"];
         let selection: usize = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -51,16 +51,34 @@ pub fn calculator() {
             .unwrap();
 
         match selection {
-            0 => println!("You chose to Add"),
-            1 => println!("You chose to Subtract"),
-            2 => println!("You chose to Multiply"),
-            3 => println!("You chose to Divide"),
+            0 => {
+                println!("You chose to Add");
+                add(&number_set.num1, &number_set.num2);
+            }
+            1 => {
+                println!("You chose to Subtract");
+                subtract(&number_set.num1, &number_set.num2);
+            }
+            2 => {
+                println!("You chose to Multiply");
+                multiply(&number_set.num1, &number_set.num2);
+            }
+            3 => {
+                println!("You chose to Divide");
+                divide(&number_set.num1, &number_set.num2);
+            }
             4 => {
+                println!("You chose to Reset the numbers");
+                terminal::clear_screen();
+                prompt(&mut number_set);
+            }
+            5 => {
                 println!("Exiting...");
                 return;
             }
             _ => unreachable!(),
         }
+        println!("\n\n");
     }
 }
 
@@ -111,18 +129,26 @@ fn prompt(set: &mut NumberSet) {
     }
 }
 
-// fn add(num1: &i32, num2: &i32) -> i32 {
-//     num1 + num2
-// }
+fn add(num1: &i32, num2: &i32) {
+    let sum = num1 + num2;
+    print_result(sum);
+}
 
-// fn subtract(num1: &i32, num2: &i32) -> i32 {
-//     num1 - num2
-// }
+fn subtract(num1: &i32, num2: &i32) {
+    let difference = num1 - num2;
+    print_result(difference);
+}
 
-// fn multiply(num1: &i32, num2: &i32) -> i32 {
-//     num1 * num2
-// }
+fn multiply(num1: &i32, num2: &i32) {
+    let product = num1 * num2;
+    print_result(product);
+}
 
-// fn divide(num1: &i32, num2: &i32) -> i32 {
-//     num1 / num2
-// }
+fn divide(num1: &i32, num2: &i32) {
+    let quotient = num1 / num2;
+    print_result(quotient);
+}
+
+fn print_result(result: i32) {
+    println!("The result is: {}", result);
+}

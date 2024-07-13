@@ -1,4 +1,6 @@
 mod commands;
+mod utils;
+use crate::utils::terminal::clear_screen;
 use clap::Parser;
 
 const VERSION: &str = "1.0.0";
@@ -25,19 +27,27 @@ struct Args {
     /// Run the calculator
     #[arg(short, long)]
     calculator: bool,
+
+    /// Server Actions Menu
+    #[arg(short, long)]
+    server: bool,
 }
 
 fn main() {
+    clear_screen();
     let args = Args::parse();
 
-    if args.game {
-        commands::game::guessing_game("Sebastien");
-    } else if args.calculator {
-        commands::calculator::calculator();
-    } else {
-        println!(
-            "Hello,{} you called this program {} times!",
-            args.name, args.count
-        );
+    match args {
+        Args { game: true, .. } => commands::game::guessing_game("Sebastien"),
+        Args {
+            calculator: true, ..
+        } => commands::calculator::calculator(),
+        Args { server: true, .. } => commands::server::server_menu(),
+        _ => {
+            println!(
+                "Hello,{} you called this program {} times!",
+                args.name, args.count
+            );
+        }
     }
 }
