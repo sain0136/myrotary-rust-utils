@@ -84,7 +84,7 @@ pub fn calculator() {
 
 fn prompt(set: &mut NumberSet) {
     loop {
-        let mut input = String::new();
+        let mut input: String = String::new();
         println!("Enter two numbers you would like to operate on separated by a space.");
         match io::stdin().read_line(&mut input) {
             Ok(_) => {
