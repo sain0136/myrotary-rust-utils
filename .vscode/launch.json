@@ -11,6 +11,18 @@
             "preLaunchTask": "cargo build",
             "stopOnEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Attach to Process",
+            "program": "${workspaceFolder}/target/debug/myrotary-rust-utils.exe",
+            "pid": 17624, // Replace 12345 with the actual PID
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }
+// tasklist /FI "IMAGENAME eq myrotary-rust-utils.exe" --- find the process id

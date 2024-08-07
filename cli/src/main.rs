@@ -2,6 +2,8 @@ mod commands;
 mod utils;
 use crate::utils::terminal::clear_screen;
 use clap::Parser;
+pub mod prod;
+use prod::prod;
 
 const VERSION: &str = "1.0.0";
 const ABOUT: &str = "My Rotary Server Rust CLI";
@@ -31,11 +33,16 @@ struct Args {
     /// Server Actions Menu
     #[arg(short, long)]
     server: bool,
+
+    // Personal Information
+    #[arg(short, long)]
+    profile: bool,
 }
 
 fn main() {
     clear_screen();
     let args = Args::parse();
+    prod();
 
     match args {
         Args { game: true, .. } => commands::game::guessing_game("Sebastien"),
@@ -43,6 +50,7 @@ fn main() {
             calculator: true, ..
         } => commands::calculator::calculator(),
         Args { server: true, .. } => commands::server::server_menu(),
+        Args { profile : true, ..} => commands::profile::profile_menu(),
         _ => {
             println!(
                 "Hello,{} you called this program {} times!",
