@@ -1,3 +1,4 @@
+use crate::utils;
 use crate::utils::terminal::clear_screen;
 use cfonts::{say, Align, BgColors, Colors, Env, Fonts, Options};
 use dialoguer::Input;
@@ -88,23 +89,30 @@ pub fn profile_menu() {
 }
 
 pub fn personal_information() {
-    let os_mode = "win";
+    let env = utils::terminal::load_env("OSMODE");
+    let os_mode;
+    match env {
+        Ok(value) => {
+            os_mode = value;
+        }
+        Err(e) => {
+            println!("Failed to load env with error {:?}", e);
+            println!("Exiting...");
+            panic!();
+        }
+    }
     let owner_config: Result<SystemOwner, Box<dyn std::error::Error>>;
     let file_path: &Path;
-    match os_mode {
-        "win" => {
-            file_path = Path::new("utils-config.toml");
-            owner_config = read_config(file_path);
-        }
-        "linux" => {
-            file_path = Path::new("/etc/utils-config.toml");
-            owner_config = read_config(file_path);
-        }
-        _ => {
-            println!("Invalid OS Mode");
-            println!("Exiting...");
-            panic!()
-        }
+    if os_mode == "windows" {
+        file_path = Path::new("utils-config.toml");
+        owner_config = read_config(file_path);
+    } else if os_mode == "linux" {
+        file_path = Path::new("/etc/utils-config.toml");
+        owner_config = read_config(file_path);
+    } else {
+        println!("Invalid OS Mode");
+        println!("Exiting...");
+        panic!();
     }
     match owner_config {
         Ok(file) => {
