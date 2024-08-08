@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KEY }}" > id_rsa
+          chmod 600 id_rsa
+          ssh-keyscan -t rsa ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          
+      - name: Deploy RotaryUtils
+        run: |
+          ssh -i id_rsa ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }} <<'ENDSSH'
+            echo "Connected"
+            cd /home/servicehost/myrotary-rust-utils 
+            git stash 
+            git pull #public repo so i can do this directly without PAT token
+            cp /home/servicehost/productionfiles/myrotary-rust-utils/.env /home/servicehost/myrotary-rust-utils/cli
+            cd cli
+            cargo build --release
+          ENDSSH
