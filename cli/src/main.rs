@@ -43,7 +43,7 @@ fn main() {
     clear_screen();
     let args = Args::parse();
     prod();
-    println!("Testing Again");
+    println!("Testing CI/CD");
     match args {
         Args { game: true, .. } => commands::game::guessing_game("Sebastien"),
         Args {
