@@ -89,25 +89,16 @@ pub fn profile_menu() {
 }
 
 pub fn personal_information() {
-    let env = utils::terminal::load_env("OSMODE");
-    let os_mode;
-    match env {
-        Ok(value) => {
-            os_mode = value;
-        }
-        Err(e) => {
-            println!("Failed to load env with error {:?}", e);
-            println!("Exiting...");
-            panic!();
-        }
-    }
+    let os_mode = utils::terminal::load_env_var("OSMODE");
+    let path_to_toml = utils::terminal::load_env_var("PATH_TO_TOML");
+
     let owner_config: Result<SystemOwner, Box<dyn std::error::Error>>;
     let file_path: &Path;
     if os_mode == "windows" {
-        file_path = Path::new("utils-config.toml");
+        file_path = Path::new(&path_to_toml);
         owner_config = read_config(file_path);
     } else if os_mode == "linux" {
-        file_path = Path::new("/etc/utils-config.toml");
+        file_path = Path::new(&path_to_toml);
         owner_config = read_config(file_path);
     } else {
         println!("Invalid OS Mode");

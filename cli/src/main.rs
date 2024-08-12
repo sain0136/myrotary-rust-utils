@@ -22,11 +22,11 @@ struct Args {
     #[arg(short = 'k', long, default_value_t = 1)]
     count: u8,
 
-    /// Play a game
+    /// Play a number guessing game
     #[arg(short, long)]
     game: bool,
 
-    /// Run the calculator
+    /// Run a basic calculator
     #[arg(short, long)]
     calculator: bool,
 
@@ -34,16 +34,15 @@ struct Args {
     #[arg(short, long)]
     server: bool,
 
-    // Personal Information
+    /// View/Save Personal Information
     #[arg(short, long)]
     profile: bool,
 }
 
 fn main() {
+    prod();
     clear_screen();
     let args = Args::parse();
-    prod();
-    println!("Testing CI/CD");
     match args {
         Args { game: true, .. } => commands::game::guessing_game("Sebastien"),
         Args {
