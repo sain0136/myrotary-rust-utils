@@ -4,8 +4,7 @@ use std::env;
 use std::error::Error;
 use std::fs;
 use std::io::stdin;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::thread;
 
 fn main() {
@@ -43,20 +42,25 @@ fn main() {
                 };
                 let file_size = metadata.len();
                 println!("Log Files Size: {}", file_size);
-                thread::spawn(move || {
-                    let mut input_line = String::new();
-                    println!("Would you like to roll over logs? (Y/y)");
-                    match stdin().read_line(&mut input_line) {
-                        Ok(_) => {
-                            if input_line.trim() == "y" || input_line.trim() == "Y" {
-                                println!("Rolling Logs!");
-                                rotate_logs(&env_path);
-                            } else {
-                                println!("Watching log file!")
+                thread::spawn({
+                    let env_path_clone = env_path.clone();
+                    // Create a clone of env_path to share with the thread otherwise it will be moved and cannot be used
+                    // Create a new thread to handle the log rotation
+                    move || {
+                        let mut input_line = String::new();
+                        println!("Would you like to roll over logs? (Y/y)");
+                        match stdin().read_line(&mut input_line) {
+                            Ok(_) => {
+                                if input_line.trim() == "y" || input_line.trim() == "Y" {
+                                    println!("Rolling Logs!");
+                                    rotate_logs(&env_path_clone);
+                                } else {
+                                    println!("Watching log file!")
+                                }
                             }
-                        }
-                        Err(_) => {
-                            eprintln!("Failed to read line");
+                            Err(_) => {
+                                eprintln!("Failed to read line");
+                            }
                         }
                     }
                 });
@@ -77,7 +81,7 @@ fn rotate_logs(path: &str) {
         // Create the "archive" folder in the parent directory if it doesn't exist
         let archive_dir = parent_dir.join("archive"); // Add the "archive" directory to the parent directory
         if !archive_dir.exists() {
-            fs::create_dir(&archive_dir)?;
+            fs::create_dir(&archive_dir).expect("Failed to create archive directory");
             println!("Created archive directory: {:?}", archive_dir);
         }
         //Rename the original file with a timestamp and move it to the archive
@@ -90,10 +94,8 @@ fn rotate_logs(path: &str) {
             Ok(_) => println!("Moved file to archive: {:?}", new_file_path),
             Err(e) => eprintln!("Failed to move file: {}", e),
         }
-        println!("Moved file to archive: {:?}", new_file_path);
-
         //Create a new file with the same name as the original file
-        let mut new_file = match fs::File::create(file_path) {
+        match fs::File::create(file_path) {
             Ok(file) => file,
             Err(e) => {
                 eprintln!("Failed to create new file: {}", e);
@@ -105,3 +107,5 @@ fn rotate_logs(path: &str) {
         eprintln!("Could not determine the parent directory for the provided file path.");
     }
 }
+
+
