@@ -1,4 +1,5 @@
 use inotify::{Inotify, WatchMask};
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::io::stdin;
@@ -52,8 +53,6 @@ fn main() {
             }
         }
     }
-
-    Ok(())
 }
 
 fn load_env(key: &str) -> Result<String, Box<dyn Error>> {
