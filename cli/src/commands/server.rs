@@ -1,5 +1,6 @@
 use crate::utils::terminal::clear_screen;
 use cfonts::{say, Align, BgColors, Colors, Env, Fonts, Options};
+use dialoguer::console::Term;
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::process::Command;
 use std::str;
@@ -51,7 +52,7 @@ pub fn server_menu() {
                 show_nginx_logs();
             }
             3 => {
-                update_server();
+                display_system_info();
             }
             4 => {
                 clear_screen();
@@ -211,36 +212,43 @@ pub fn show_nginx_logs() {
     }
 }
 
-pub fn update_server() {
-    let output = Command::new("sudo")
-        .arg("apt-get")
-        .arg("update")
-        .arg("&&")
-        .arg("sudo")
-        .arg("apt-get")
-        .arg("upgrade")
-        .output();
+pub fn display_system_info() {
+    // Display header
+    let term = Term::stdout();
+    term.write_line("========================================").unwrap();
+    term.write_line("          SYSTEM INFORMATION            ").unwrap();
+    term.write_line("========================================").unwrap();
 
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
-                );
-            } else {
-                eprintln!("Command executed with failing error code");
-                eprintln!(
-                    "stderr: {}",
-                    str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
-                );
-            }
-        }
-        Err(e) => {
+    // Function to execute a command and print its output
+    fn execute_command(command: &str, args: &[&str]) {
+        let output = Command::new(command)
+            .args(args)
+            .output()
+            .expect("Failed to execute command");
+
+        if output.status.success() {
+            println!(
+                "{}",
+                str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
+            );
+        } else {
+            eprintln!("Command executed with failing error code");
             eprintln!(
-                "Failed to execute apt-get update and upgrade command: {}",
-                e
+                "stderr: {}",
+                str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
             );
         }
     }
+
+    // List all installed packages
+    println!("Installed Packages:");
+    execute_command("dpkg", &["--list"]);
+
+    // Display disk usage
+    println!("\nDisk Usage:");
+    execute_command("df", &["-h"]);
+
+    // Show system memory usage
+    println!("\nMemory Usage:");
+    execute_command("free", &["-h"]);
 }
