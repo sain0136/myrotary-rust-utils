@@ -6,6 +6,8 @@ use std::fs;
 use std::io::stdin;
 use std::path::Path;
 use std::thread;
+pub mod http_server;
+use http_server::server;
 
 fn main() {
     let mut inotify = Inotify::init().expect("Failed to initialize inotify");
@@ -24,7 +26,7 @@ fn main() {
         .expect("Failed to add file watch");
 
     let mut buffer = [0; 1024];
-
+    http_server::run();
     loop {
         let events = inotify
             .read_events_blocking(&mut buffer)
@@ -107,5 +109,3 @@ fn rotate_logs(path: &str) {
         eprintln!("Could not determine the parent directory for the provided file path.");
     }
 }
-
-

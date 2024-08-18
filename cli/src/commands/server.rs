@@ -43,15 +43,19 @@ pub fn server_menu() {
             .unwrap();
         match selection {
             0 => {
+                clear_screen();
                 echo_test();
             }
             1 => {
+                clear_screen();
                 display_system_info();
             }
             2 => {
+                clear_screen();
                 display_servers_status();
             }
             3 => {
+                clear_screen();
                 show_nginx_logs();
             }
             4 => {
