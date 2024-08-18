@@ -13,40 +13,25 @@ const TITLE: &str = "Profile Settings";
 const GREETING: &str = "Welcome to the Profile Settings Menu - Please select an option\nAll settings will be written to a file";
 
 #[derive(Serialize, Deserialize, Debug)]
-enum ThemeColors {
-    System,
-    Black,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-    White,
-    Gray,
-    RedBright,
-    GreenBright,
-    YellowBright,
-    BlueBright,
-    MagentaBright,
-    CyanBright,
-    WhiteBright,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 struct SystemOwner {
     first_name: String,
     address: String,
     age: i8,
     gender: String,
-    theme: ThemeColors,
 }
 
-pub fn profile_menu() {
+fn set_theme(theme: Option<Colors>) -> Colors {
+    match theme {
+        Some(theme) => theme,
+        None => Colors::CyanBright,
+    }
+}
+
+pub fn profile_menu(theme: Option<Colors>) {
     say(Options {
         text: String::from(TITLE),
         font: Fonts::FontSimple3d,
-        colors: vec![Colors::CyanBright],
+        colors: vec![set_theme(theme)],
         background: BgColors::Transparent,
         align: Align::Left,
         letter_spacing: 1,
@@ -117,12 +102,12 @@ pub fn personal_information() {
                         set_personal(file_path);
                     } else if input.trim() == "n" || input.trim() == "no" {
                         clear_screen();
-                        profile_menu();
+                        profile_menu(None);
                     }
                 }
                 Err(_) => {
                     eprintln!("Failed to read line");
-                    profile_menu();
+                    profile_menu(None);
                 }
             }
         }
@@ -140,19 +125,19 @@ pub fn personal_information() {
                         set_personal(file_path);
                     } else if input.trim() == "n" || input.trim() == "no" {
                         clear_screen();
-                        profile_menu();
+                        profile_menu(None);
                     }
                 }
                 Err(_) => {
                     eprintln!("Failed to read line");
-                    profile_menu();
+                    profile_menu(None);
                 }
             }
         }
         Err(e) => {
             // Handle all other errors
             println!("Error: {:?}", e);
-            profile_menu();
+            profile_menu(None);
         }
     }
 }
@@ -188,7 +173,6 @@ fn set_personal(file_path: &Path) {
         address: String::new(),
         age: 0,
         gender: String::new(),
-        theme: ThemeColors::System,
     };
 
     loop {
@@ -235,11 +219,11 @@ fn set_personal(file_path: &Path) {
                             match write_operation {
                                 Ok(_) => {
                                     println!("Personal Information Saved Successfully");
-                                    profile_menu();
+                                    profile_menu(None);
                                 }
                                 Err(e) => {
                                     println!("Error: {:?}\n", e);
-                                    profile_menu();
+                                    profile_menu(None);
                                 }
                             }
                         } else if input.trim() == "n" || input.trim() == "no" {
@@ -248,13 +232,13 @@ fn set_personal(file_path: &Path) {
                     }
                     Err(_) => {
                         eprintln!("Failed to read line");
-                        profile_menu();
+                        profile_menu(None);
                     }
                 }
             }
             5 => {
                 println!("Returning to profile menu...");
-                profile_menu()
+                profile_menu(None)
             }
             _ => {
                 break;
@@ -263,4 +247,35 @@ fn set_personal(file_path: &Path) {
     }
 }
 
-pub fn change_theme() {}
+pub fn change_theme() {
+    let themes = vec![
+        Colors::MagentaBright,
+        Colors::CyanBright,
+        Colors::GreenBright,
+        Colors::Yellow,
+        Colors::Red,
+        Colors::Blue,
+    ];
+    let theme_names: Vec<&str> = themes
+        .iter()
+        .map(|theme| match theme {
+            Colors::MagentaBright => "Magenta Bright",
+            Colors::CyanBright => "Cyan Bright",
+            Colors::GreenBright => "Green Bright",
+            Colors::Yellow => "Yellow",
+            Colors::Red => "Red",
+            Colors::Blue => "Blue",
+            _ => "Unknown color",
+        })
+        .collect();
+
+    let selection: usize = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Choose a theme")
+        .default(0)
+        .items(&theme_names[..])
+        .interact()
+        .unwrap();
+
+    let selected_theme = themes[selection].clone(); // clone here because we need to pass it to the profile menu, atempt to move it will cause a compile error
+    profile_menu(Some(selected_theme));
+}

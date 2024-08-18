@@ -17,9 +17,7 @@
             "request": "attach",
             "name": "Attach to Process",
             "program": "${workspaceFolder}/target/debug/myrotary-rust-utils.exe",
-            "pid": 17624, // Replace 12345 with the actual PID
-            "args": [],
-            "cwd": "${workspaceFolder}",
+            "pid": 10452, // tasklist /FI "IMAGENAME eq myrotary-rust-utils.exe" --- find the process id ,  - MAKE sure you run vscosde as admin
             "stopOnEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
@@ -36,4 +34,4 @@
         },
     ]
 }
-// tasklist /FI "IMAGENAME eq myrotary-rust-utils.exe" --- find the process id
+

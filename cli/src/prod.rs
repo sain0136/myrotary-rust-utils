@@ -32,8 +32,6 @@ pub fn prod() {
                     );
                 }
             }
-            println!("Exiting...");
-            panic!();
         }
     }
     let handle = thread::spawn(move || {
