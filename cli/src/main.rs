@@ -40,7 +40,6 @@ struct Args {
 }
 
 fn main() {
-    prod();
     clear_screen();
     let args = Args::parse();
     match args {
@@ -49,7 +48,10 @@ fn main() {
             calculator: true, ..
         } => commands::calculator::calculator(),
         Args { server: true, .. } => commands::server::server_menu(),
-        Args { profile : true, ..} => commands::profile::profile_menu(),
+        Args { profile: true, .. } => {
+            prod();
+            commands::profile::profile_menu(None);
+        }
         _ => {
             println!(
                 "Hello,{} you called this program {} times!",

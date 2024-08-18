@@ -19,6 +19,11 @@ impl NumberSet {
     }
 }
 
+enum CalcResult {
+    Success(i32),
+    Error(String),
+}
+
 pub fn calculator() {
     say(Options {
         text: String::from("Rotary Calculator"),
@@ -42,7 +47,15 @@ pub fn calculator() {
     let mut number_set = NumberSet { num1: 0, num2: 0 };
     prompt(&mut number_set);
     loop {
-        let options = &["Add", "Subtract", "Multiply", "Divide", "Reset", "Exit"];
+        let options = &[
+            "Add",
+            "Subtract",
+            "Multiply",
+            "Divide",
+            "Exponentiate",
+            "Reset",
+            "Exit",
+        ];
         let selection: usize = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -65,14 +78,24 @@ pub fn calculator() {
             }
             3 => {
                 println!("You chose to Divide");
-                divide(&number_set.num1, &number_set.num2);
+                match divide(&number_set.num1, &number_set.num2) {
+                    CalcResult::Success(i) => print_result(i),
+                    CalcResult::Error(err) => print!("{}", err),
+                }
             }
             4 => {
+                println!("You chose to Exponentiate");
+                match exponentiate(&number_set.num1, &number_set.num2) {
+                    CalcResult::Success(i) => print_result(i),
+                    CalcResult::Error(err) => print!("{}", err),
+                }
+            }
+            5 => {
                 println!("You chose to Reset the numbers");
                 terminal::clear_screen();
                 prompt(&mut number_set);
             }
-            5 => {
+            6 => {
                 println!("Exiting...");
                 return;
             }
@@ -144,9 +167,26 @@ fn multiply(num1: &i32, num2: &i32) {
     print_result(product);
 }
 
-fn divide(num1: &i32, num2: &i32) {
+fn divide(num1: &i32, num2: &i32) -> CalcResult {
+    if *num2 == 0 {
+        return CalcResult::Error(String::from("Cant devide by zero"));
+    }
     let quotient = num1 / num2;
-    print_result(quotient);
+    CalcResult::Success(quotient)
+}
+
+fn exponentiate(base: &i32, exponent: &i32) -> CalcResult {
+    if *base == 0 && *exponent < 0 {
+        return CalcResult::Error(String::from("Cannot raise zero to a negative power"));
+    }
+
+    let result = (*base as i64).checked_pow(*exponent as u32);
+
+    // Check for overflow
+    match result {
+        Some(value) => return CalcResult::Success(value as i32),
+        None => return CalcResult::Error(String::from("Overflow occurred")),
+    };
 }
 
 fn print_result(result: i32) {
