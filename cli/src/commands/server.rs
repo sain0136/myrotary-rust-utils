@@ -30,9 +30,9 @@ pub fn server_menu() {
     loop {
         let options = &[
             "Test Echo",
+            "System Info",
             "Server Status",
             "Nginx Logs",
-            "Update Server",
             "Exit",
         ];
         let selection: usize = Select::with_theme(&ColorfulTheme::default())
@@ -46,13 +46,13 @@ pub fn server_menu() {
                 echo_test();
             }
             1 => {
-                list_pm2_processes();
+                display_system_info();
             }
             2 => {
-                show_nginx_logs();
+                list_pm2_processes();
             }
             3 => {
-                display_system_info();
+                show_nginx_logs();
             }
             4 => {
                 clear_screen();
@@ -215,9 +215,12 @@ pub fn show_nginx_logs() {
 pub fn display_system_info() {
     // Display header
     let term = Term::stdout();
-    term.write_line("========================================").unwrap();
-    term.write_line("          SYSTEM INFORMATION            ").unwrap();
-    term.write_line("========================================").unwrap();
+    term.write_line("========================================")
+        .unwrap();
+    term.write_line("          SYSTEM INFORMATION            ")
+        .unwrap();
+    term.write_line("========================================")
+        .unwrap();
 
     // Function to execute a command and print its output
     fn execute_command(command: &str, args: &[&str]) {
@@ -241,8 +244,8 @@ pub fn display_system_info() {
     }
 
     // List all installed packages
-    println!("Installed Packages:");
-    execute_command("dpkg", &["--list"]);
+    println!("Linux Distribution Information:");
+    execute_command("lsb_release", &["-a"]);
 
     // Display disk usage
     println!("\nDisk Usage:");
@@ -251,4 +254,8 @@ pub fn display_system_info() {
     // Show system memory usage
     println!("\nMemory Usage:");
     execute_command("free", &["-h"]);
+
+    // Check for available updates
+    println!("\nAvailable Updates:");
+    execute_command("apt-get", &["-s", "upgrade"]);
 }
