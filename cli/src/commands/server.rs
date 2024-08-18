@@ -1,5 +1,6 @@
 use crate::utils::terminal::clear_screen;
 use cfonts::{say, Align, BgColors, Colors, Env, Fonts, Options};
+use dialoguer::console::Term;
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::process::Command;
 use std::str;
@@ -29,9 +30,9 @@ pub fn server_menu() {
     loop {
         let options = &[
             "Test Echo",
+            "System Info",
             "Server Status",
             "Nginx Logs",
-            "Update Server",
             "Exit",
         ];
         let selection: usize = Select::with_theme(&ColorfulTheme::default())
@@ -45,13 +46,13 @@ pub fn server_menu() {
                 echo_test();
             }
             1 => {
-                list_pm2_processes();
+                display_system_info();
             }
             2 => {
-                show_nginx_logs();
+                display_servers_status();
             }
             3 => {
-                update_server();
+                show_nginx_logs();
             }
             4 => {
                 clear_screen();
@@ -137,50 +138,42 @@ pub fn echo_test() {
     }
 }
 
-pub fn list_pm2_processes() {
-    let output = Command::new("pm2").arg("list").output();
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
-                );
-            } else {
-                eprintln!("Command executed with failing error code");
-                eprintln!(
-                    "stderr: {}",
-                    str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
-                );
+pub fn display_servers_status() {
+    fn execute_and_display(command: &str, args: &[&str], title: &str) {
+        let output = Command::new(command).args(args).output();
+        match output {
+            Ok(output) => {
+                display_status(title);
+                if output.status.success() {
+                    println!(
+                        "{}",
+                        str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
+                    );
+                } else {
+                    eprintln!("Command executed with failing error code");
+                    eprintln!(
+                        "stderr: {}",
+                        str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
+                    );
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to execute {} command: {}", command, e);
             }
         }
-        Err(e) => {
-            eprintln!("Failed to execute pm2 list command: {}", e);
-        }
     }
-    let frontend_status = Command::new("curl")
-        .arg("-I")
-        .arg("http://localhost/frontend")
-        .output();
-    match frontend_status {
-        Ok(output) => {
-            if output.status.success() {
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
-                );
-            } else {
-                eprintln!("Command executed with failing error code");
-                eprintln!(
-                    "stderr: {}",
-                    str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
-                );
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to execute curl command: {}", e);
-        }
-    }
+
+    execute_and_display("pm2", &["list"], "BACKEND STATUS");
+    execute_and_display(
+        "curl",
+        &["-Ik", "https://myrotaryprojects.org/"],
+        "FRONTEND STATUS",
+    );
+    execute_and_display(
+        "systemctl",
+        &["status", "rotaryanalytic.service"],
+        "ROTARYANALYTIC SERVER GOLANG STATUS",
+    );
 }
 
 pub fn show_nginx_logs() {
@@ -211,36 +204,53 @@ pub fn show_nginx_logs() {
     }
 }
 
-pub fn update_server() {
-    let output = Command::new("sudo")
-        .arg("apt-get")
-        .arg("update")
-        .arg("&&")
-        .arg("sudo")
-        .arg("apt-get")
-        .arg("upgrade")
-        .output();
+pub fn display_system_info() {
+    display_status("SYSTEM INFORMATION");
 
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
-                );
-            } else {
-                eprintln!("Command executed with failing error code");
-                eprintln!(
-                    "stderr: {}",
-                    str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
-                );
-            }
-        }
-        Err(e) => {
-            eprintln!(
-                "Failed to execute apt-get update and upgrade command: {}",
-                e
-            );
-        }
+    // List all installed packages
+    println!("Linux Distribution Information:");
+    execute_command("lsb_release", &["-a"]);
+
+    // Display disk usage
+    println!("\nDisk Usage:");
+    execute_command("df", &["-h"]);
+
+    // Show system memory usage
+    println!("\nMemory Usage:");
+    execute_command("free", &["-h"]);
+
+    // Check for available updates
+    println!("\nAvailable Updates:");
+    execute_command("apt-get", &["-s", "upgrade"]);
+}
+
+pub fn display_status(title: &str) {
+    let term = Term::stdout();
+    term.write_line("========================================")
+        .unwrap();
+    term.write_line(&format!("          {}          ", title))
+        .unwrap();
+    term.write_line("========================================")
+        .unwrap();
+}
+
+// Function to execute a command and print its output
+fn execute_command(command: &str, args: &[&str]) {
+    let output = Command::new(command)
+        .args(args)
+        .output()
+        .expect("Failed to execute command");
+
+    if output.status.success() {
+        println!(
+            "{}",
+            str::from_utf8(&output.stdout).expect("Invalid UTF-8 sequence")
+        );
+    } else {
+        eprintln!("Command executed with failing error code");
+        eprintln!(
+            "stderr: {}",
+            str::from_utf8(&output.stderr).expect("Invalid UTF-8 sequence")
+        );
     }
 }
