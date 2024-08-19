@@ -87,7 +87,7 @@ fn main() {
                     }
                 };
                 let file_size = metadata.len();
-                println!("Log Files Size: {} bytes", file_size);
+                println!("Log File Modified. Log Files Size: {} bytes", file_size);
 
                 thread::spawn({
                     let env_path_clone = env_path.clone();
