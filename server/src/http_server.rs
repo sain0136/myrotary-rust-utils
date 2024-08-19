@@ -30,7 +30,7 @@ pub fn run() -> std::io::Result<()> {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                println!("New connection: {}", stream.peer_addr().unwrap());
+                println!("\nNew Http connection: {}", stream.peer_addr().unwrap());
                 thread::spawn(|| {
                     handle_client(stream);
                 });

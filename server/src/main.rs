@@ -68,7 +68,7 @@ fn main() {
                 clear_screen();
 
                 // let now = Instant::now();
-                // println!("\n");
+                // println!("\n");cd
                 // if !first && now - last_modified < Duration::from_millis(1000) {
                 //     println!("Skipping log file modification");
                 //     continue;
