@@ -29,4 +29,6 @@ jobs:
             cp /home/servicehost/productionfiles/myrotary-rust-utils/.server.env /home/servicehost/myrotary-rust-utils/server
             cd cli
             cargo build --release
+            cd /home/servicehost/productionfiles/myrotary-rust-utils/server
+            cargo build --release
           ENDSSH
