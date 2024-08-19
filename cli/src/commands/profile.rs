@@ -277,5 +277,6 @@ pub fn change_theme() {
         .unwrap();
 
     let selected_theme = themes[selection].clone(); // clone here because we need to pass it to the profile menu, atempt to move it will cause a compile error
+    clear_screen();
     profile_menu(Some(selected_theme));
 }
