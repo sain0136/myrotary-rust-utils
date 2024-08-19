@@ -26,7 +26,7 @@ jobs:
             git stash 
             git pull #public repo so i can do this directly without PAT token
             cp /home/servicehost/productionfiles/myrotary-rust-utils/.env /home/servicehost/myrotary-rust-utils/cli
-            cp /home/servicehost/productionfiles/myrotary-rust-utils/.server.env /home/servicehost/myrotary-rust-utils/server
+            cp /home/servicehost/productionfiles/myrotary-rust-utils/.server.env /home/servicehost/myrotary-rust-utils/server/.env
             cd cli
             cargo build --release
             cd /home/servicehost/myrotary-rust-utils/server
