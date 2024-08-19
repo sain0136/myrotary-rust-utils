@@ -1,13 +1,25 @@
 use chrono::Local;
 use inotify::{Inotify, WatchMask};
-use std::env;
 use std::error::Error;
 use std::fs;
 use std::io::stdin;
 use std::path::Path;
 use std::thread;
+use std::{env, process};
+pub mod http_server;
+use std::sync::{Arc, Mutex};
+// use std::time::{Duration, Instant};
 
 fn main() {
+    clear_screen();
+    thread::spawn(|| {
+        // Start the HTTP server
+        match http_server::run() {
+            Ok(_) => println!("HTTP server started successfully"),
+            Err(e) => panic!("Failed to start HTTP server: {}", e),
+        }
+    });
+
     let mut inotify = Inotify::init().expect("Failed to initialize inotify");
 
     let env_path: String = match load_env("LOG_FILEPATH") {
@@ -19,20 +31,54 @@ fn main() {
         }
     };
 
-    inotify
+    let file_watch = inotify
         .add_watch(&env_path, WatchMask::MODIFY)
         .expect("Failed to add file watch");
+    println!("Begin watching log file: {}", env_path);
+
+    let folder_watch = inotify
+        .add_watch(
+            "/tmp/rust",
+            WatchMask::CREATE | WatchMask::DELETE | WatchMask::MODIFY,
+        )
+        .expect("Failed to add folder watch");
+    println!("Begin watching folder: /tmp/rust");
 
     let mut buffer = [0; 1024];
-
+    let restart = Arc::new(Mutex::new(false));
     loop {
+        let restart_status = restart.lock().unwrap();
+        if *restart_status {
+            break;
+        }
         let events = inotify
             .read_events_blocking(&mut buffer)
             .expect("Error reading events");
 
-        for event in events {
-            if event.mask.contains(inotify::EventMask::MODIFY) {
-                println!("Log File Modified");
+        let restart = Arc::new(Mutex::new(false));
+        // let mut last_modified = Instant::now();
+        // let mut first = true;
+        for (index, event) in events.enumerate() {
+            println!("\nProcessing event number {}", index);
+            // if index > 0 {
+            //     println!("Skipping event number {}", index - 1);
+            //     continue;
+            // }
+            if event.wd == file_watch && event.mask.contains(inotify::EventMask::MODIFY) {
+                clear_screen();
+
+                // let now = Instant::now();
+                // println!("\n");
+                // if !first && now - last_modified < Duration::from_millis(1000) {
+                //     println!("Skipping log file modification");
+                //     continue;
+                // } else if !first && now - last_modified >= Duration::from_millis(1000) {
+                //     println!("Log File Modified (First Event)");
+                //     last_modified = now;
+                // }
+
+                // first = false;
+
                 let metadata = match fs::metadata(&env_path) {
                     Ok(metadata) => metadata,
                     Err(e) => {
@@ -41,21 +87,29 @@ fn main() {
                     }
                 };
                 let file_size = metadata.len();
-                println!("Log Files Size: {}", file_size);
+                println!("Log Files Size: {} bytes", file_size);
+
                 thread::spawn({
                     let env_path_clone = env_path.clone();
+                    let restart_clone = Arc::clone(&restart);
                     // Create a clone of env_path to share with the thread otherwise it will be moved and cannot be used
                     // Create a new thread to handle the log rotation
                     move || {
                         let mut input_line = String::new();
-                        println!("Would you like to roll over logs? (Y/y)");
+                        println!("Would you like to roll over logs? (Y/y or N/n)");
                         match stdin().read_line(&mut input_line) {
                             Ok(_) => {
                                 if input_line.trim() == "y" || input_line.trim() == "Y" {
                                     println!("Rolling Logs!");
                                     rotate_logs(&env_path_clone);
+                                    let mut restart = restart_clone.lock().unwrap();
+                                    *restart = true;
+                                    println!("Rolling Logs Complete!");
+                                    process::exit(0);
                                 } else {
-                                    println!("Watching log file!")
+                                    println!(
+                                        "Not Rolling Logs! Continuing to watch logs and folders..."
+                                    );
                                 }
                             }
                             Err(_) => {
@@ -64,9 +118,19 @@ fn main() {
                         }
                     }
                 });
+            } else if event.wd == folder_watch {
+                if event.mask.contains(inotify::EventMask::CREATE) {
+                    println!("File created in /tmp/rust: {:?}", event.name);
+                } else if event.mask.contains(inotify::EventMask::DELETE) {
+                    println!("File deleted from /tmp/rust: {:?}", event.name);
+                } else if event.mask.contains(inotify::EventMask::MODIFY) {
+                    println!("File modified in /tmp/rust: {:?}", event.name);
+                }
             }
+            // println!("Here")
         }
     }
+    main();
 }
 
 fn load_env(key: &str) -> Result<String, Box<dyn Error>> {
@@ -85,7 +149,7 @@ fn rotate_logs(path: &str) {
             println!("Created archive directory: {:?}", archive_dir);
         }
         //Rename the original file with a timestamp and move it to the archive
-        let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
+        let timestamp = Local::now().format("%Y_%m_%d_%H%M%S").to_string();
         let file_stem = file_path.file_stem().unwrap().to_str().unwrap();
         let extension = file_path.extension().unwrap_or_default().to_str().unwrap();
         let new_file_name = format!("{}-{}.{}", file_stem, timestamp, extension);
@@ -108,4 +172,6 @@ fn rotate_logs(path: &str) {
     }
 }
 
-
+pub fn clear_screen() {
+    print!("\x1B[2J\x1B[1;1H");
+}
