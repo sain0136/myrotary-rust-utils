@@ -22,13 +22,15 @@ jobs:
         run: |
           ssh -i id_rsa ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }} <<'ENDSSH'
             echo "Connected"
-            cd /home/servicehost/myrotary-rust-utils 
-            git stash 
-            git pull #public repo so i can do this directly without PAT token
-            cp /home/servicehost/productionfiles/myrotary-rust-utils/.env /home/servicehost/myrotary-rust-utils/cli
-            cp /home/servicehost/productionfiles/myrotary-rust-utils/.server.env /home/servicehost/myrotary-rust-utils/server/.env
+            cd /opt/apps/myrotary-rust-utils/
+            sudo git stash 
+            sudo git pull #public repo so i can do this directly without PAT token
+            sudo cp /opt/apps/productionfiles/utils/.env /opt/apps/myrotary-rust-utils/cli
+            sudo cp /opt/apps/productionfiles/utils/.server.env /opt/apps/myrotary-rust-utils/server/.env
             cd cli
-            cargo build --release
-            cd /home/servicehost/myrotary-rust-utils/server
-            cargo build --release
+            #  Build the project with elevated permissions and explicit environment variables
+            sudo RUSTUP_HOME=$HOME/.rustup CARGO_HOME=$HOME/.cargo ~/.cargo/bin/cargo build --release
+            sudo ln -sf /opt/apps/myrotary-rust-utils/cli/target/release/myrotary-rust-utils /usr/local/bin/myrotary-rust-utils # force create symbolic link to binary
+            cd /opt/apps/myrotary-rust-utils/server
+            sudo RUSTUP_HOME=$HOME/.rustup CARGO_HOME=$HOME/.cargo ~/.cargo/bin/cargo build --release
           ENDSSH
