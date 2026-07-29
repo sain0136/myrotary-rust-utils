@@ -9,7 +9,7 @@ use std::{env, process};
 pub mod http_server;
 use std::sync::{Arc, Mutex};
 // use std::time::{Duration, Instant};
-
+// easy work
 fn main() {
     clear_screen();
     thread::spawn(|| {
